@@ -1,17 +1,17 @@
+import React from 'react';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import ConsentScreen from './screens/ConsentScreen';
-import Dashboard from './screens/Dashboard';
-
-const Stack = createNativeStackNavigator();
+import AppNavigator from './navigation/StackNavigator';
+import { StatusBar } from 'react-native';
+import { colors } from './constants/colors';
 
 export default function App() {
   return (
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName="Consent">
-        <Stack.Screen name="Consent" component={ConsentScreen} />
-        <Stack.Screen name="Dashboard" component={Dashboard} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <SafeAreaProvider>
+      <NavigationContainer>
+        <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
+        <AppNavigator />
+      </NavigationContainer>
+    </SafeAreaProvider>
   );
 }

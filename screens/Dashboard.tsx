@@ -1,46 +1,122 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, Text, View, ScrollView, Platform, Alert } from 'react-native';
+import HealthDataCard from '../components/HealthDataCard';
+import { getStoredConsent } from '../utils/storage';
+import { colors } from '../constants/colors';
+import { getMockHealthData } from '../utils/mockData';
+import { checkHealthDataPermissions } from '../services/healthKitService';
+import { checkCommonHealthPermissions } from '../services/commonHealthService';
 
-export default function Dashboard() {
+const DashboardScreen = () => {
+  const [consentedData, setConsentedData] = useState<string[]>([]);
+  const [isConnected, setIsConnected] = useState(false);
+  const [healthData, setHealthData] = useState<Record<string, any>>({});
+
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
+
+  const loadDashboardData = async () => {
+    try {
+      // Get stored consent settings
+      const consent = await getStoredConsent();
+      if (consent && consent.consentedDataTypes) {
+        setConsentedData(consent.consentedDataTypes);
+      }
+      
+      // Check if we're connected to health data source
+      let connected = false;
+      if (Platform.OS === 'ios') {
+        connected = await checkHealthDataPermissions();
+      } else {
+        connected = await checkCommonHealthPermissions();
+      }
+      setIsConnected(connected);
+      
+      // For the POC, we'll use mock data
+      if (connected) {
+        const data = await getMockHealthData();
+        setHealthData(data);
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to load dashboard data');
+      console.error(error);
+    }
+  };
+
+  const getSourceName = () => {
+    return Platform.OS === 'ios' ? 'Apple HealthKit' : 'CommonHealth';
+  };
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Welcome to Your Dashboard!</Text>
-      <Text style={styles.subtitle}>Health Data Sources Connected:</Text>
-
-      <View style={styles.card}>
-        <Text>Apple HealthKit / CommonHealth</Text>
-        <Text>Status: Connected ✅</Text>
+    <ScrollView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Your Health Data</Text>
+        <Text style={styles.subtitle}>
+          {isConnected
+            ? `Connected to ${getSourceName()}`
+            : `Not connected to ${getSourceName()}`}
+        </Text>
       </View>
 
-      <View style={styles.card}>
-        <Text>Data Types Shared:</Text>
-        <Text>- Steps</Text>
-        <Text>- Heart Rate</Text>
-        <Text>- Sleep</Text>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Connected Data Types</Text>
+        {consentedData.length > 0 ? (
+          consentedData.map((dataType) => (
+            <HealthDataCard
+              key={dataType}
+              dataType={dataType}
+              isConnected={isConnected}
+              data={healthData[dataType]}
+            />
+          ))
+        ) : (
+          <Text style={styles.emptyText}>
+            No health data types selected. Visit the Consent tab to select data to share.
+          </Text>
+        )}
       </View>
-    </View>
+    </ScrollView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: colors.background,
+  },
+  header: {
     padding: 20,
-    justifyContent: 'flex-start',
+    backgroundColor: colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
   title: {
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 10,
+    color: colors.textDark,
   },
   subtitle: {
-    fontSize: 18,
-    marginBottom: 20,
+    fontSize: 16,
+    color: colors.textLight,
+    marginTop: 4,
   },
-  card: {
-    backgroundColor: '#f1f1f1',
-    padding: 15,
-    borderRadius: 10,
+  section: {
+    padding: 20,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
     marginBottom: 15,
+    color: colors.textDark,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: colors.textLight,
+    fontStyle: 'italic',
+    textAlign: 'center',
+    padding: 20,
   },
 });
+
+export default DashboardScreen;

@@ -11,7 +11,7 @@ import {
 import ConsentToggle from '../components/ConsentToggle';
 import { colors } from '../constants/colors';
 import { getStoredConsent, saveConsent } from '../utils/storage';
-import { requestHealthKitPermissions } from '../services/healthkitService';
+import { requestHealthKitPermissions } from '../services/healthKitService';
 import { requestCommonHealthPermissions } from '../services/commonHealthService';
 
 const HEALTH_DATA_TYPES = [
@@ -24,7 +24,7 @@ const HEALTH_DATA_TYPES = [
 ];
 
 const ConsentScreen = () => {
-  const [selectedTypes, setSelectedTypes] = useState([]);
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [hasRequestedPermissions, setHasRequestedPermissions] = useState(false);
 
   useEffect(() => {
@@ -43,7 +43,11 @@ const ConsentScreen = () => {
     }
   };
 
-  const toggleDataType = (dataTypeId) => {
+  interface ToggleDataTypeFunction {
+    (dataTypeId: string): void;
+  }
+
+  const toggleDataType: ToggleDataTypeFunction = (dataTypeId) => {
     setSelectedTypes((prevSelectedTypes) => {
       if (prevSelectedTypes.includes(dataTypeId)) {
         return prevSelectedTypes.filter(id => id !== dataTypeId);

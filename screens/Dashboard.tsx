@@ -4,13 +4,13 @@ import HealthDataCard from '../components/HealthDataCard';
 import { getStoredConsent } from '../utils/storage';
 import { colors } from '../constants/colors';
 import { getMockHealthData } from '../utils/mockData';
-import { checkHealthDataPermissions } from '../services/healthkitService';
+import { checkHealthDataPermissions } from '../services/healthKitService';
 import { checkCommonHealthPermissions } from '../services/commonHealthService';
 
 const DashboardScreen = () => {
-  const [consentedData, setConsentedData] = useState([]);
+  const [consentedData, setConsentedData] = useState<string[]>([]);
   const [isConnected, setIsConnected] = useState(false);
-  const [healthData, setHealthData] = useState({});
+  const [healthData, setHealthData] = useState<Record<string, any>>({});
 
   useEffect(() => {
     loadDashboardData();
